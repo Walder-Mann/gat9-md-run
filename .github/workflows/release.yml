@@ -1,0 +1,33 @@
+name: Build and Package VSIX
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Package Extension to VSIX
+      run: npm run package
+
+    - name: Upload VSIX to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          *.vsix
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
