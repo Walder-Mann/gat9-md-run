@@ -1,0 +1,58 @@
+{
+  "name": "markdown-runner",
+  "displayName": "Markdown Runner",
+  "version": "0.0.1",
+  "publisher": "gat",
+  "author": "Walder-Mann",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onWebviewPanel:markdown.preview",
+    "onUri"
+  ],
+  "main": "./out/extension.js",
+  "files": [
+    "out/**/*.js",
+    "package.json",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdown-runner.runCodeInternal",
+        "title": "Run Code Block"
+      }
+    ],
+    "markdown.markdownItPlugins": true
+  },
+  "scripts": {
+    "vscode:prepublish": "esbuild ./src/extension.ts --bundle --outfile=./out/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "esbuild-compile": "esbuild ./src/extension.ts --bundle --outfile=./out/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "esbuild-watch": "esbuild ./src/extension.ts --bundle --outfile=./out/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.2",
+    "license-checker": "^25.0.1",
+    "typescript": "^5.0.0"
+  },
+  "description": "Интерактивная среда выполнения PowerShell-скриптов прямо из стандартного встроенного средства предпросмотра **VS Code Markdown Preview** (`Ctrl + Shift + V`).",
+  "dependencies": {
+    "@types/vscode": "^1.80.0"
+  },
+  "keywords": [],
+  "type": "commonjs"
+}
