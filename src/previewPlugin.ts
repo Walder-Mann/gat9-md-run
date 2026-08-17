@@ -11,7 +11,7 @@ export function extendMarkdownItPlugin(md: any, publisherId: string, extensionNa
     md.renderer.rules.fence = (tokens: any[], idx: number, options: any, env: any, self: any) => {
         const token = tokens[idx];
 
-        if (token.info.trim() === 'powershell') {
+        if (/^powershell(\s|$)/.test(token.info.trim())) {
             const currentIndex = blockCount++;
             const originalHtml = defaultRender(tokens, idx, options, env, self);
             const encodedCode = encodeURIComponent(token.content);
@@ -38,7 +38,7 @@ export function extendMarkdownItPlugin(md: any, publisherId: string, extensionNa
             let html = '';
             html += '<div style="position: relative; margin-bottom: 5px;">';
             html += '<a href="' + globalHref + '" ';
-            html += 'style="position: absolute; top: 5px; right: 5px; z-index: 10; text-decoration: none; cursor: pointer; padding: 4px 10px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; font-size: 11px; font-weight: bold; font-family: sans-serif;">';
+            html += 'style="position: absolute; top: 2px; right: 2px; z-index: 10; text-decoration: none; cursor: pointer; padding: 4px 10px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; font-size: 8px; font-weight: bold; font-family: sans-serif;">';
             html += '▶';
             html += '</a>';
             html += originalHtml;

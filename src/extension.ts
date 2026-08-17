@@ -4,6 +4,10 @@ import { calculateLenses } from './codeLensProvider';
 import { extendMarkdownItPlugin } from './previewPlugin';
 
 export async function activate(context: vscode.ExtensionContext) {
+    const packageJSON = context.extension.packageJSON;
+    const publisherId = packageJSON.publisher;
+    const extensionName = packageJSON.name;
+    const commandName = packageJSON.contributes.commands[0].command
 
     context.subscriptions.push(
         vscode.window.registerUriHandler({
@@ -30,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         }
 
                         if (document) {
-                            await PowerShellRunner.run(document, decodeURIComponent(rawCode), parseInt(rawIndex, 10));
+                            await PowerShellRunner.run(document, decodeURIComponent(rawCode), parseInt(rawIndex, 10), extensionName);
                         } else {
                             vscode.window.showErrorMessage('GAT9 Runner: Не удалось открыть целевой файл.');
                         }
@@ -39,10 +43,6 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
-    const packageJSON = context.extension.packageJSON;
-    const publisherId = packageJSON.publisher;
-    const extensionName = packageJSON.name;
-    const commandName = packageJSON.contributes.commands[0].command
 
 
     context.subscriptions.push(
@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const targetUri = vscode.Uri.parse(fileUriStr);
             const document = vscode.workspace.textDocuments.find(doc => doc.uri.fsPath.toLowerCase() === targetUri.fsPath.toLowerCase());
             if (document) {
-                await PowerShellRunner.run(document, code, index);
+                await PowerShellRunner.run(document, code, index, extensionName);
             }
         })
     );

@@ -2,9 +2,33 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 
 export class PowerShellRunner {
-    private static readonly utf8Header = '\$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();';
+    public static collectInitScriptsBefore(lines: string[], targetLine: number): string {
+        let initCodeCombined = '';
+        let isInsideInitBlock = false;
 
-    public static async run(document: vscode.TextDocument, codeToExecute: string, blockIndex: number) {
+        for (let i = 0; i < targetLine; i++) {
+            const trimmedLine = lines[i].trim();
+
+            if (!isInsideInitBlock) {
+                if (/^```powershell(\s|$)/.test(trimmedLine) && trimmedLine.includes('init-script')) {
+                    isInsideInitBlock = true;
+                }
+            } else {
+                if (trimmedLine.startsWith('```')) {
+                    isInsideInitBlock = false;
+                    if (initCodeCombined && !initCodeCombined.trim().endsWith(';')) {
+                        initCodeCombined += ';';
+                    }
+                } else {
+                    initCodeCombined += lines[i] + '\n';
+                }
+            }
+        }
+
+        return initCodeCombined.trim();
+    }
+
+    public static async run(document: vscode.TextDocument, codeToExecute: string, blockIndex: number, extensionName: string) {
         const text = document.getText();
         const lines = text.split('\n');
 
@@ -35,10 +59,35 @@ export class PowerShellRunner {
             .join('\n')
             .replace(/`\s*\n/g, ' ');
 
+        const config = vscode.workspace.getConfiguration(extensionName);
+        const enableInitScripts = config.get<boolean>('powershell.enableInitScripts', true);
+        const enableUtf8 = config.get<boolean>('powershell.enableInitCommand', true);
+
+        let pswhHeader = config.get<string>('powershell.initCommand', '').trim();
+
         const isWin = process.platform === 'win32';
         const shellExecutable = isWin ? 'powershell.exe' : 'pwsh';
-        const escapedCode = processedCode.replace(/"/g, '\"');
-        const pswhCommand = `chcp 65001 > $null; $env:WSL_UTF8=1; ${this.utf8Header} ${escapedCode}`;
+        let escapedCode = processedCode.replace(/"/g, '\"');
+
+        let initCode = '';
+        if (enableInitScripts) {
+            initCode = PowerShellRunner.collectInitScriptsBefore(lines, targetLine);
+        }
+
+        if (initCode) {
+            escapedCode = `${initCode} ${escapedCode}`;
+        }
+
+        let pswhCommand = '';
+
+        if (enableUtf8 && pswhHeader) {
+            if (!pswhHeader.endsWith(';')) {
+                pswhHeader += ';';
+            }
+            pswhCommand = `${pswhHeader} ${escapedCode}`;
+        } else {
+            pswhCommand = escapedCode;
+        }
 
         vscode.window.setStatusBarMessage('Выполнение PowerShell...', 3000);
 
@@ -48,7 +97,11 @@ export class PowerShellRunner {
             env: process.env
         }, async (error: Error | null, stdout: string, stderr: string) => {
             let output = stdout || stderr || (error ? error.message : 'Выполнено успешно (нет вывода).');
-            const resultBlock = `\n\`\`\`text\n${output.trim()}\n\`\`\`\n`;
+            const targetLineText = lines[targetLine];
+            const indentMatch = targetLineText.match(/^(\s*)/);
+            const indent = indentMatch ? indentMatch[0] : '';
+
+            const resultBlock = `${indent}\`\`\`text\n${output.trim()}\n${indent}\`\`\`\n`;
 
             let deleteRange: vscode.Range | null = null;
             let nextLineIdx = targetLine + 1;
