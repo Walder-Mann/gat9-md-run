@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { exec } from 'child_process';
 
 export class PowerShellRunner {
@@ -90,10 +91,16 @@ export class PowerShellRunner {
         }
 
         vscode.window.setStatusBarMessage('Выполнение PowerShell...', 3000);
+        let fileDir = process.env.USERPROFILE || process.env.HOME; // Дефолтный путь на случай, если файл не сохранен
+
+        if (document.uri.scheme === 'file') {
+            fileDir = path.dirname(document.uri.fsPath);
+        }
 
         exec(pswhCommand, {
             shell: shellExecutable,
             encoding: 'utf8',
+            cwd: fileDir,
             env: process.env
         }, async (error: Error | null, stdout: string, stderr: string) => {
             let output = stdout || stderr || (error ? error.message : 'Выполнено успешно (нет вывода).');

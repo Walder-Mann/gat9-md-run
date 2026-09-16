@@ -1,8 +1,9 @@
 name: Build and Package VSIX
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'    
 
 permissions:
   contents: write
@@ -30,7 +31,9 @@ jobs:
       - name: Upload VSIX to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           files: |
             *.vsix
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -14,8 +14,8 @@
                 },
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "^\\[watch\\] build finished",
-                    "endsPattern": "watching for changes...",
+                    "beginsPattern": "^\\[watch\\]", 
+                    "endsPattern": "build finished"
                 }
             }
         },
